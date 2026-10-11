@@ -121,3 +121,56 @@ To tear down:
 ```powershell
 docker compose down -v
 ```
+
+---
+
+## 6. Background Worker & Scheduled Reminders
+
+InvoiceFlow AI includes a dedicated worker for evaluating due dates and dispatching payment reminders.
+
+### Running as a Scheduled Job (Cron / One-off):
+```powershell
+cd backend
+..\backend\.venv\Scripts\python.exe -m app.workers.reminder_worker
+```
+
+### Running as a Continuous Background Daemon:
+```powershell
+cd backend
+..\backend\.venv\Scripts\python.exe -m app.workers.reminder_worker --daemon --interval 3600
+```
+
+### Configuring Transactional Email:
+In your `.env` file, supply your SMTP credentials:
+```env
+SMTP_HOST=smtp.mailgun.org
+SMTP_PORT=587
+SMTP_USER=postmaster@yourdomain.com
+SMTP_PASSWORD=your-smtp-password
+SMTP_TLS=true
+EMAIL_FROM=billing@yourdomain.com
+EMAIL_FROM_NAME="Your Company Billing"
+```
+If credentials are not configured, the application safely rejects email requests with clear diagnostic messaging (`EmailConfigurationError`) rather than silently hanging or reporting false deliveries.
+
+---
+
+## 7. Phase 5: Analytics, CSV Exports & AI Receivables Assistant
+
+### Configuring the AI Assistant:
+InvoiceFlow AI includes an AI Receivables Assistant. The assistant is **fully optional** and never required for core operations:
+```env
+# Optional: Set to 'openai' for live LLM execution, or 'mock' for deterministic local rule-based analysis
+AI_PROVIDER=mock
+OPENAI_API_KEY=sk-your-openai-api-key-here
+AI_MODEL=gpt-4o-mini
+```
+- **Without an API key (`AI_PROVIDER=mock`)**: The assistant generates full executive summaries, tone-based payment reminders (`friendly`, `professional`, `firm`), and answers natural language financial questions using deterministic backend calculation rules.
+- **With an API key (`AI_PROVIDER=openai`)**: Synthesizes natural-language narratives and reminders using authenticated, organization-scoped financial figures as prompt context.
+- **Safety**: The assistant never runs arbitrary SQL and has no autonomous permission to mutate records or send emails without human review.
+
+### Verifying CSV Exports:
+Exports are available at `/analytics`, `/invoices`, `/payments`, `/receivables`, and `/clients`.
+All downloaded CSV files include UTF-8 BOM encoding for seamless display in Microsoft Excel and Google Sheets, and feature formula-injection defense (CWE-1236) to prevent untrusted formulas from executing.
+
+

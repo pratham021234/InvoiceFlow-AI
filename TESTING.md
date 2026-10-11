@@ -55,14 +55,56 @@ InvoiceFlow AI employs an automated test suite verifying correctness, tenant iso
 8. **API Health Tests (`test_health.py`)**:
    - Health check and database connectivity verification.
 
+9. **Payments & Reversals Tests (`test_payments.py`)**:
+   - Full payment transition to `PAID` state with zero balance.
+   - Partial payments and multiple payments per invoice with sequential payment numbering (`PAY-INV-1001-01`).
+   - Rejection of zero and negative payment amounts via Pydantic schema validation.
+   - Strict overpayment prevention: Payments exceeding remaining balance rejected with HTTP 400.
+   - Draft and cancelled invoice payment rejection.
+   - Non-destructive payment reversal with audit reason, recalculating invoice balance back to `ISSUED` or `PARTIALLY_PAID`.
+   - Idempotency key handling preventing duplicate charges on retried client requests.
+   - Cross-tenant payment recording prevention.
+
+10. **Receivables & Email Automation Tests (`test_receivables_and_email.py`)**:
+    - Accounts receivable aging buckets (`current`, `1_7_days`, `8_30_days`, `31_60_days`, `over_60_days`).
+    - Exclusions: Fully settled and cancelled invoices excluded from overdue metrics even if past due.
+    - Graceful error handling when SMTP credentials are unconfigured (`EmailConfigurationError` / HTTP 503).
+    - Transactional invoice email dispatch with PDF attachment and provider response recording (`accepted_by_provider`).
+    - Manual and scheduled payment reminder dispatches.
+    - Scheduled reminder batch worker execution with milestone offset rules.
+    - Idempotent reminder de-duplication: Subsequent scheduler runs skip already reminded milestones.
+    - Cross-tenant email log access prevention.
+
+11. **Financial Analytics & Reporting Tests (`test_analytics.py`)**:
+    - Empty dataset handling: Safe zero-initialized responses without ZeroDivisionError.
+    - Invoiced and collected totals: Drafts and cancelled invoices strictly excluded; partial payments accurately reflected.
+    - Overdue aging calculations: Fully paid invoices excluded from overdue metrics even when past due; balance-based aging buckets validated.
+    - Client performance reporting: Independent aggregation preventing cartesian join duplicates when clients have multiple invoices and payments.
+    - Status distribution: Exact counts and total balances across invoice lifecycle states.
+    - Cross-tenant isolation: Organization B receives empty/zero metrics and cannot access Organization A's analytics summary (HTTP 403).
+
+12. **CSV Exports & Formula Injection Defense (`test_csv_export.py`)**:
+    - Formula injection sanitization (CWE-1236): Neutralization of values starting with `=`, `+`, `-`, `@`, `\t`, `\r` by prepending `'`.
+    - Numeric preservation: Numerical figures format cleanly without macro quoting.
+    - Valid exports across datasets: Invoices, payments, open receivables, overdue items, clients, and monthly financial summaries.
+    - Cross-tenant export prevention: Prohibits exporting records of unassociated organizations (HTTP 403).
+
+13. **AI Receivables Assistant Tests (`test_ai_assistant.py`)**:
+    - Executive financial summary: Validated metrics, insights, and recommendations; deterministic fallback when external API key is absent.
+    - Tone-based reminder drafting: Dynamic reminder generation across `friendly`, `professional`, and `firm` tones.
+    - Non-mutation guarantee: Calling AI endpoints cannot alter invoice balances, statuses, or trigger autonomous outbound emails.
+    - Natural language queries: Constrained intent classification (`collections_current_month`, `overdue_invoices`, etc.) backed by trusted analytics.
+    - Prompt and SQL injection defense: Malicious SQL statements safely handled without database execution.
+    - Multi-tenant AI isolation: Organization B cannot generate reminders or access context for Organization A's invoices.
+
 ---
 
 ## 2. Test Environment Setup
 
 Tests run in an isolated in-memory SQLite database (`sqlite:///:memory:`) using SQLAlchemy's `StaticPool`. This ensures:
 - **Zero test pollution**: Every test executes inside a clean transactional rollback.
-- **Speed**: All 36 tests complete in under 14 seconds.
-- **Zero external dependencies**: Tests run without requiring a live external database server.
+- **Speed**: All 63 tests complete in under 27 seconds.
+- **Zero external dependencies**: Tests run without requiring a live external database server or external AI credentials.
 
 ---
 
@@ -95,5 +137,13 @@ backend/tests/
 ├── test_invoices_lifecycle.py               # Invoice builder, sequential numbering, cancellation (5 tests)
 ├── test_mass_assignment_and_constraints.py # Mass assignment defense and unique constraints (2 tests)
 ├── test_organizations_isolation.py         # Multi-tenant isolation, cross-tenant rejection & RBAC (3 tests)
-└── test_pdf_generation.py                  # ReportLab PDF generation & cross-tenant PDF security (2 tests)
+├── test_payments.py                         # Payments, installments, overpayment policy, reversals (8 tests)
+├── test_pdf_generation.py                  # ReportLab PDF generation & cross-tenant PDF security (2 tests)
+├── test_receivables_and_email.py            # Aging brackets, SMTP mocks, reminders & idempotency (6 tests)
+├── test_analytics.py                        # Analytics summary, MoM changes, aging, join-prevention (6 tests)
+├── test_csv_export.py                       # UTF-8 exports, formula injection defense, tenant isolation (3 tests)
+└── test_ai_assistant.py                     # AI summaries, tone reminders, read-only queries, safety (4 tests)
 ```
+
+Total: **63 Automated Tests Passing (100%)**
+

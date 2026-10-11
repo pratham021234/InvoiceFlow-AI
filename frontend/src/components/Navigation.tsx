@@ -16,6 +16,9 @@ import {
   User,
   Users,
   Receipt,
+  CreditCard,
+  Clock,
+  BarChart3,
 } from "lucide-react";
 
 export default function Navigation() {
@@ -61,6 +64,39 @@ export default function Navigation() {
             >
               <Receipt className="w-4 h-4" />
               <span>Invoices</span>
+            </Link>
+            <Link
+              href="/payments"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname.startsWith("/payments")
+                  ? "bg-slate-800 text-indigo-400"
+                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+              }`}
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Payments</span>
+            </Link>
+            <Link
+              href="/receivables"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname.startsWith("/receivables")
+                  ? "bg-slate-800 text-indigo-400"
+                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>Receivables</span>
+            </Link>
+            <Link
+              href="/analytics"
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname.startsWith("/analytics")
+                  ? "bg-slate-800 text-indigo-400"
+                  : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>Analytics</span>
             </Link>
             <Link
               href="/clients"

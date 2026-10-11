@@ -75,6 +75,7 @@ class Invoice(Base, TimestampMixin):
     items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan", order_by="InvoiceItem.display_order")
     payments = relationship("Payment", back_populates="invoice", cascade="all, delete-orphan")
     reminder_logs = relationship("ReminderLog", back_populates="invoice", cascade="all, delete-orphan")
+    email_logs = relationship("EmailLog", back_populates="invoice", cascade="all, delete-orphan")
 
     @property
     def effective_status(self) -> InvoiceStatus:

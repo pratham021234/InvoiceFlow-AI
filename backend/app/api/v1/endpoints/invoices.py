@@ -271,3 +271,35 @@ def download_invoice_pdf(
             "Cache-Control": "no-cache",
         },
     )
+
+
+@router.get("/{invoice_id}/payments")
+def get_invoice_payments(
+    organization_id: str,
+    invoice_id: str,
+    current_user: User = Depends(get_current_user),
+    membership: OrganizationMember = Depends(get_current_active_org_member),
+    db: Session = Depends(get_db),
+):
+    """Retrieves payment history specifically for an invoice."""
+    from app.services.payment_service import list_payments
+    from app.schemas.payment import PaymentListResponse, PaymentResponse
+
+    inv = get_invoice_by_id(db=db, organization_id=organization_id, invoice_id=invoice_id)
+    if not inv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found.")
+
+    items, total = list_payments(
+        db=db,
+        organization_id=organization_id,
+        invoice_id=invoice_id,
+        skip=0,
+        limit=100,
+    )
+    return PaymentListResponse(
+        items=[PaymentResponse.model_validate(p) for p in items],
+        total=total,
+        skip=0,
+        limit=100,
+    )
+

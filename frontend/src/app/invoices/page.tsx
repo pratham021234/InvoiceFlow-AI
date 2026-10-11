@@ -90,6 +90,15 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleExportCsv = async () => {
+    if (!activeOrganization) return;
+    try {
+      await api.analytics.downloadCsv(activeOrganization.id, "invoices", statusFilter || undefined);
+    } catch (err: any) {
+      alert(err.message || "Failed to export invoices CSV");
+    }
+  };
+
   const handleDuplicate = async (invoice: Invoice) => {
     if (!activeOrganization) return;
     setActionLoadingId(invoice.id);
@@ -142,13 +151,22 @@ export default function InvoicesPage() {
               Create, track, issue, and generate downloadable PDFs for client billings.
             </p>
           </div>
-          <Link
-            href="/invoices/new"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4" />
-            Create Invoice
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 font-medium text-sm transition"
+            >
+              <Download className="w-4 h-4 text-indigo-400" />
+              <span>Export CSV</span>
+            </button>
+            <Link
+              href="/invoices/new"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4" />
+              Create Invoice
+            </Link>
+          </div>
         </div>
 
         {/* Financial Highlights */}

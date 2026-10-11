@@ -133,6 +133,67 @@ Backend invoice PDFs are rendered using **ReportLab 4.2**:
 - **`clients`**: Customer profiles, billing addresses, country, contact name, tax identifiers, archiving flags, non-cascading relationships.
 - **`invoices`**: Invoices with status (`draft`, `issued`, `sent`, `partially_paid`, `paid`, `overdue`, `cancelled`), financial totals, public share tokens, cancellation reason, issued timestamp.
 - **`invoice_items`**: Line items with descriptions, quantities, unit prices, discounts, tax rates, line totals, display order.
-- **`payments`**: Payment ledger records tied to invoices with amount, date, method, reference.
-- **`reminder_logs`**: Reminder email attempt log with unique idempotency keys.
+- **`payments`**: Payment ledger records tied to invoices with amount, date, method, reference, `payment_status` (`completed`, `reversed`, `failed`), `is_manual`, reversal audit metadata, and idempotency key.
+- **`email_logs`**: Transactional email attempt log tracking `notification_type` (`invoice_send`, `payment_reminder`), recipient, `delivery_status` (`queued`, `processing`, `accepted_by_provider`, `failed`), `provider_message_id`, and idempotency keys.
 - **`audit_logs`**: Immutable audit trails recording user, org, entity, action, and sanitized changes.
+
+---
+
+## 8. Payments, Receivables & Email Architecture (Phase 4)
+
+### Payment Ledger & Overpayment Prevention
+- **Invariants**: `amount_paid` is the authoritative sum of all valid, non-reversed completed payments.
+- **Overpayment Policy**: Reject any payment amount where `amount > remaining_balance` with `HTTP 400 Bad Request`.
+- **Atomic Balance Updates**: Transactions use `with_for_update()` row locks on the invoice row to prevent race conditions during concurrent settlements.
+- **Immutable Reversals**: Payments are never hard-deleted. Reversals create an auditable state transition (`COMPLETED -> REVERSED`), store the user's reversal reason and timestamp, and recalculate invoice balances.
+
+### Accounts Receivable & Aging Engine
+- **Consistent Overdue Calculation**: An invoice is overdue if and only if `due_date < date.today()`, `balance_due > 0`, and status is not `draft`, `cancelled`, or `paid`.
+- **Aging Categories**: Standard GAAP aging brackets:
+  - `current`: Not yet overdue (due today or future).
+  - `1_7_days`: 1 to 7 days past due.
+  - `8_30_days`: 8 to 30 days past due.
+  - `31_60_days`: 31 to 60 days past due.
+  - `over_60_days`: Over 60 days past due.
+
+### Transactional Email & Background Worker
+- **SMTP Protocol**: Dispatches emails with STARTTLS, configurable timeouts (10s), and attached ReportLab PDFs.
+- **Delivery Transparency**: Accurately distinguishes provider submission (`accepted_by_provider`) from confirmed end-user delivery; failures are recorded with sanitized diagnostics without leaking credentials.
+- **Scheduled Reminder Daemon**: Background worker (`app.workers.reminder_worker`) processes milestone offsets (`upcoming_3d`, `due_today`, `overdue_3d`, `overdue_7d`, `overdue_14d`, `overdue_30d`) with composite idempotency keys (`reminder:{invoice.id}:{rule}:{due_date}`) preventing duplicate dispatches across concurrent worker runs.
+
+---
+
+## 9. Analytics, Reports, CSV Exports & AI Receivables Assistant (Phase 5)
+
+### Centralized Analytics Engine (`analytics_service.py`)
+- **Metric Definitions & Arithmetic Invariants**:
+  - **Invoiced Amount**: Authoritative sum of eligible issued invoice totals (`status NOT IN ('draft', 'cancelled')`). Correctly quantizes credit adjustments.
+  - **Payments Collected**: Authoritative sum of valid, completed, non-reversed payments recorded during the selected period.
+  - **Outstanding Receivables**: Remaining unsettled balance (`balance_due`) of active issued invoices.
+  - **Overdue Receivables**: Current balance of eligible invoices whose due dates are strictly before the current organization business date (`due_date < today`).
+  - **Partially Paid Amount**: Remaining balance across invoices having at least one valid completed payment (`amount_paid > 0` and `balance_due > 0`).
+  - **Collection Rate (%)**: Mathematical ratio of all-time payments collected divided by all-time invoiced totals: `(all_time_collected / all_time_invoiced) * 100`. Returns `0.00%` safely when invoiced volume is zero.
+  - **Average Collection Time**: Computed for fully settled invoices as average calendar days from `issue_date` to final payment `settled_date`. Returns `None` when insufficient settlement history exists.
+  - **Month-over-Month (MoM) Changes**: Comparable periods evaluated using percentage change `((current - prior) / prior) * 100`. Safely handles zero denominators (returns `None` when prior and current are 0, or `+100.0%` when moving from 0 to positive balance).
+- **Cartesian Join-Duplicate Prevention in Client Reports**:
+  Joining `Invoice` and `Payment` in a single SQL query produces inflated duplicate totals for invoices with multiple partial payments. The engine resolves this by aggregating invoice volume (`inv_map`), payments collected (`pay_map`), and overdue balances (`overdue_map`) as independent subquery aggregations grouped by `client_id`, assembling the unified report in Python with zero arithmetic distortion.
+
+### Secure CSV Export Engine (`csv_export_service.py`)
+- **Formula Injection Mitigation (CWE-1236)**:
+  Spreadsheet applications can execute untrusted user data starting with `=`, `+`, `-`, `@`, `\t`, or `\r`. `sanitize_csv_value()` sanitizes untrusted string cells by prepending a single quote `'`, ensuring spreadsheet programs render the text safely without executing formulas or DDE commands. Numeric figures (`Decimal`, `int`, `float`) are kept clean and unquoted.
+- **UTF-8 BOM Support**:
+  Exports prepend the UTF-8 Byte Order Mark (`\ufeff`) to ensure consistent non-ASCII character display across international Microsoft Excel and Google Sheets clients.
+- **Tenant Scoping & Large Dataset Handling**:
+  All export endpoints require authenticated organization membership and enforce database filtering by `organization_id`. Large datasets stream via HTTP responses without memory bottlenecks.
+
+### AI Receivables Assistant (`ai_assistant_service.py`)
+- **Trusted Financial Source of Truth**:
+  Financial metrics, overdue balances, and top debtor amounts are computed in Python by the backend before AI prompt assembly. The LLM is never relied upon to perform authoritative calculations.
+- **Constrained Intent Classification (Zero Arbitrary SQL Execution)**:
+  Natural language financial queries are matched against validated deterministic intents (`collections_current_month`, `overdue_invoices`, `largest_debtors`, `mom_comparison`, `general_snapshot`). The system never converts natural language into arbitrary SQL statements against the database.
+- **Human-in-the-Loop Safeguards**:
+  Payment reminder drafts generated across `friendly`, `professional`, and `firm` tones require explicit user review, editing, and dispatch confirmation. The AI assistant cannot mutate financial records or trigger outbound emails autonomously.
+- **Zero External Key Dependency**:
+  If `OPENAI_API_KEY` is unconfigured or the external provider fails, the assistant transparently falls back to deterministic rule-based summaries without impacting the application.
+
+

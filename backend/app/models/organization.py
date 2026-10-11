@@ -43,6 +43,7 @@ class Organization(Base, TimestampMixin):
     invoices = relationship("Invoice", back_populates="organization")
     payments = relationship("Payment", back_populates="organization")
     reminder_logs = relationship("ReminderLog", back_populates="organization")
+    email_logs = relationship("EmailLog", back_populates="organization", cascade="all, delete-orphan")
 
 
 class OrganizationMember(Base, TimestampMixin):

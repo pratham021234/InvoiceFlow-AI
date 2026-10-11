@@ -50,3 +50,55 @@ A reverse proxy (Nginx, Traefik, Caddy, or Cloudflare) should terminate TLS/HTTP
 - `https://yourdomain.com/*` -> Next.js Frontend (`:3000`)
 - `https://yourdomain.com/api/*` -> FastAPI Backend (`:8000`)
 - `https://yourdomain.com/docs` -> FastAPI OpenAPI Docs (`:8000`)
+
+---
+
+## 6. Background Reminder Worker Deployment
+
+Deploy the reminder worker as a dedicated background service or cron job:
+
+### Option A: Systemd Daemon / Docker Worker Container
+```ini
+[Unit]
+Description=InvoiceFlow AI Scheduled Reminder Worker
+After=network.target
+
+[Service]
+Type=simple
+User=invoiceflow
+WorkingDirectory=/opt/invoiceflow/backend
+ExecStart=/opt/invoiceflow/backend/.venv/bin/python -m app.workers.reminder_worker --daemon --interval 3600
+Restart=always
+RestartSec=10
+EnvironmentFile=/opt/invoiceflow/.env
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### Option B: Linux Cron Job (Daily Run)
+```cron
+# Run daily at 08:00 UTC
+0 8 * * * cd /opt/invoiceflow/backend && /opt/invoiceflow/backend/.venv/bin/python -m app.workers.reminder_worker >> /var/log/invoiceflow_reminders.log 2>&1
+```
+Idempotency keys ensure that multiple workers or cron retries will never send duplicate emails for the same invoice rule milestone.
+
+---
+
+## 7. Analytics, CSV Exports & AI Deployment Considerations
+
+### Database Query Optimization:
+- Organization-scoped indexes (`ix_invoices_organization_id`, `ix_payments_organization_id`, `ix_clients_organization_id`) ensure fast analytics summaries and reports.
+- Composite date filtering uses indexed date fields (`issue_date`, `due_date`, `payment_date`).
+- Independent client aggregation queries avoid Cartesian cross-joins and memory spikes during reporting.
+
+### CSV Export Streaming & Memory Limits:
+- CSV export endpoints stream UTF-8 formatted CSV data directly to the client response, avoiding memory bottlenecks on large datasets.
+- Client applications can consume exports using streaming buffers or standard browser downloads with `Content-Disposition: attachment`.
+
+### AI Provider Deployment:
+- Deploy with `AI_PROVIDER=openai` and `OPENAI_API_KEY` set in the environment variables, or leave as `AI_PROVIDER=mock` for air-gapped or zero-cost deployments.
+- Outbound requests to `api.openai.com` require standard HTTPS outbound egress on port 443.
+- Rate limits and transient network timeouts to the AI provider are handled gracefully with automatic fallback to deterministic summaries.
+
+

@@ -4,8 +4,8 @@ from app.models.user import User
 from app.models.organization import Organization, OrganizationMember, MemberRole, MembershipStatus
 from app.models.client import Client
 from app.models.invoice import Invoice, InvoiceItem, InvoiceStatus, generate_public_token
-from app.models.payment import Payment
-from app.models.reminder import ReminderLog, ReminderType, ReminderStatus
+from app.models.payment import Payment, PaymentStatus, PaymentMethod
+from app.models.reminder import ReminderLog, ReminderType, ReminderStatus, EmailLog, EmailType, EmailStatus
 from app.models.audit import AuditLog
 
 __all__ = [
@@ -24,8 +24,13 @@ __all__ = [
     "InvoiceStatus",
     "generate_public_token",
     "Payment",
+    "PaymentStatus",
+    "PaymentMethod",
     "ReminderLog",
     "ReminderType",
     "ReminderStatus",
+    "EmailLog",
+    "EmailType",
+    "EmailStatus",
     "AuditLog",
 ]

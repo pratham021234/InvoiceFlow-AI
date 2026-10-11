@@ -23,6 +23,7 @@ class Client(Base, TimestampMixin):
     # Relationships - strictly prevent cascading deletes of financial invoices
     organization = relationship("Organization", back_populates="clients")
     invoices = relationship("Invoice", back_populates="client")
+    email_logs = relationship("EmailLog", back_populates="client")
 
     __table_args__ = (
         Index("ix_clients_org_archived", "organization_id", "is_archived"),

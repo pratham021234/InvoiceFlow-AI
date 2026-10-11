@@ -20,6 +20,7 @@ import {
   Building,
   DollarSign,
   AlertCircle,
+  Download,
 } from "lucide-react";
 
 export default function ClientsPage() {
@@ -79,6 +80,15 @@ export default function ClientsPage() {
     }
   };
 
+  const handleExportCsv = async () => {
+    if (!activeOrganization) return;
+    try {
+      await api.analytics.downloadCsv(activeOrganization.id, "clients");
+    } catch (err: any) {
+      alert(err.message || "Failed to export clients CSV");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navigation />
@@ -95,13 +105,22 @@ export default function ClientsPage() {
               Manage your client relationships, billing details, and outstanding balances.
             </p>
           </div>
-          <Link
-            href="/clients/new"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Client
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 font-medium text-sm transition"
+            >
+              <Download className="w-4 h-4 text-indigo-400" />
+              <span>Export CSV</span>
+            </button>
+            <Link
+              href="/clients/new"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Client
+            </Link>
+          </div>
         </div>
 
         {/* Filter Toolbar */}
