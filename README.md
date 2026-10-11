@@ -120,8 +120,9 @@ npm run dev
 cd backend
 python -m pytest -v
 ```
-All **63 automated unit, integration, financial calculation, and multi-tenant security regression tests** pass cleanly:
+All **64 automated unit, integration, financial calculation, and multi-tenant security regression tests** pass cleanly:
 ```text
+tests/test_customer_journey_e2e.py (1 passed)
 tests/test_auth.py (8 passed)
 tests/test_organizations_isolation.py (3 passed)
 tests/test_mass_assignment_and_constraints.py (2 passed)
@@ -135,7 +136,7 @@ tests/test_analytics.py (6 passed)
 tests/test_csv_export.py (3 passed)
 tests/test_ai_assistant.py (4 passed)
 tests/test_health.py (2 passed)
-======================= 63 passed in 22.57s =======================
+======================= 64 passed in 24.22s =======================
 ```
 
 ### Frontend Static Analysis & Production Build:

@@ -11,9 +11,9 @@
 
 | Test Suite / Quality Gate | Target Subsystem | Command Executed | Result | Duration |
 | :--- | :--- | :--- | :--- | :--- |
-| **Backend Automated Tests** | FastAPI, SQLAlchemy, Services | `python -m pytest -v` | **63 Passed, 0 Failed** | 22.57s |
+| **Backend Automated Tests** | FastAPI, SQLAlchemy, Services | `python -m pytest -v` | **64 Passed, 0 Failed** | 24.22s |
 | **Frontend Static Analysis** | Next.js, React, TypeScript | `npm run lint` | **0 Errors** (115 warnings) | 4.80s |
-| **Frontend Production Build** | Next.js App Router (20 routes) | `npm run build` | **0 Errors, Compiled** | 55.40s |
+| **Frontend Production Build** | Next.js App Router (20 routes) | `npm run build` | **0 Errors, Compiled** | 32.70s |
 | **Database Migrations** | Alembic Revisions (3 versions) | `python -m alembic upgrade head --sql`| **0 Errors, Valid DDL**| 2.10s |
 
 **Overall Gate Status:** **PASSED (100% of applicable tests succeeded)**
@@ -29,6 +29,9 @@ cd "d:\InvoiceFlow AI\backend"
 ```
 
 ### 2.2 Test Results by Test File
+
+#### `tests/test_customer_journey_e2e.py` (End-to-End Primary Customer Journey)
+- `test_customer_journey_e2e` — **PASSED** (15 sequential validation steps verifying registration, login, profile updates, client CRM, multi-item invoice creation, decimal arithmetic, sequential numbering, PDF generation, partial and full payments, receivables aging, email reminders, analytics summary, CSV exports, AI natural language queries, and cross-tenant security isolation).
 
 #### `tests/test_auth.py` (Authentication & Security)
 - `test_user_registration_success` — **PASSED**

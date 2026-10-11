@@ -17,7 +17,7 @@ Upon acquisition of InvoiceFlow AI, you receive a full-stack, enterprise-grade s
    - Robust payment reconciliation state machine with idempotency and reversal logging.
    - Dynamic PDF generation engine utilizing ReportLab with multi-currency formatting.
    - Natural language AI assistant with OpenAI integration and deterministic heuristic fallback.
-   - Complete Pytest automated test harness with **63 automated unit, integration, and security tests**.
+   - Complete Pytest automated test harness with **64 automated unit, integration, and security tests**.
 
 2. **Frontend Codebase (`frontend/`):**
    - Modern Next.js 16 (App Router) with React 19 and TypeScript 5.
@@ -164,7 +164,7 @@ As the software operator, you are responsible for:
 ## 9. Verification & Acceptance Testing
 
 Before signing off on the acquisition or deployment, execute the following commands in sequence:
-1. Backend Tests: `cd backend && python -m pytest -v` (Must output 63 passed).
+1. Backend Tests: `cd backend && python -m pytest -v` (Must output 64 passed).
 2. Frontend Lint: `cd frontend && npm run lint` (Must exit 0).
 3. Frontend Production Build: `cd frontend && npm run build` (Must output 20 routes compiled, exit 0).
 4. Migration Check: `cd backend && python -m alembic upgrade head --sql` (Must exit 0).
