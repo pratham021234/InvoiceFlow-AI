@@ -98,7 +98,8 @@ function EditInvoiceContent() {
     let discountTotal = 0;
     let taxTotal = 0;
 
-    const lineCalculations = items.map((it) => {
+    const lineCalculations = [];
+    for (const it of items) {
       const q = parseFloat(it.quantity) || 0;
       const p = parseFloat(it.unit_price) || 0;
       const d = parseFloat(it.discount_percent) || 0;
@@ -114,13 +115,13 @@ function EditInvoiceContent() {
       discountTotal += lineDiscount;
       taxTotal += lineTax;
 
-      return {
+      lineCalculations.push({
         lineSubtotal,
         lineDiscount,
         lineTax,
         lineTotal,
-      };
-    });
+      });
+    }
 
     const grandTotal = subtotal - discountTotal + taxTotal;
 

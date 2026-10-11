@@ -101,4 +101,76 @@ Idempotency keys ensure that multiple workers or cron retries will never send du
 - Outbound requests to `api.openai.com` require standard HTTPS outbound egress on port 443.
 - Rate limits and transient network timeouts to the AI provider are handled gracefully with automatic fallback to deterministic summaries.
 
+---
+
+## 8. Database Backup & Restoration Procedure
+
+### 8.1 Automated Backup Creation (PostgreSQL)
+Run scheduled backups using `pg_dump`:
+```bash
+pg_dump -h db.example.com -U invoiceflow -d invoiceflow_db -F c -b -v -f /backups/invoiceflow_$(date +%Y%m%d_%H%M%S).dump
+```
+
+### 8.2 Database Restoration
+To restore a snapshot into a clean database:
+```bash
+# 1. Terminate existing connections (if restoring to active staging db)
+psql -U postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'invoiceflow_db' AND pid <> pg_backend_pid();"
+
+# 2. Restore using pg_restore
+pg_restore -U invoiceflow -d invoiceflow_db -v -c --if-exists /backups/invoiceflow_snapshot.dump
+
+# 3. Verify schema state against Alembic
+cd /opt/invoiceflow/backend
+alembic current
+```
+
+---
+
+## 9. Rollback Guidance
+
+In the event of an unsuccessful deployment:
+
+1. **Application Container Rollback:**
+   - Revert your container image tag or git commit to the previous stable release hash.
+   - Restart the containers: `docker compose up -d` or redeploy your previous ECS/Kubernetes revision.
+2. **Database Migration Downgrade (If Necessary):**
+   - If a new migration failed or caused regressions, step down one migration revision:
+     ```bash
+     alembic downgrade -1
+     ```
+   - Always verify data integrity before executing downgrades in production.
+
+---
+
+## 10. Health Checks & Troubleshooting
+
+### Health Check Probes:
+- **Backend Liveness & Readiness:**
+  `GET https://yourdomain.com/health`
+  Returns `200 OK` with JSON:
+  ```json
+  {
+    "status": "healthy",
+    "version": "1.0.0",
+    "database": "connected",
+    "timestamp": "2026-10-11T21:40:00Z"
+  }
+  ```
+- **Frontend Liveness:**
+  `GET https://yourdomain.com/` returns `200 OK`.
+
+### Troubleshooting Common Deployment Failures:
+1. **CORS / Network Error in Browser:**
+   - Symptom: API requests fail with CORS errors in browser console.
+   - Cause: `ALLOWED_ORIGINS` in `.env` does not match the frontend domain.
+   - Solution: Add the exact frontend origin (including protocol and port, e.g. `https://app.yourdomain.com`) to `ALLOWED_ORIGINS` in `.env` and restart the backend.
+2. **Database Connection Refused:**
+   - Symptom: Backend logs `OperationalError: connection to server at "localhost", port 5432 failed`.
+   - Solution: In Docker Compose, the database hostname is `db`, not `localhost`. Set `DATABASE_URL=postgresql://invoiceflow:invoiceflow_secret@db:5432/invoiceflow_db`.
+3. **Missing Environment Variables:**
+   - Symptom: Application crashes on startup with `ValidationError`.
+   - Solution: Ensure mandatory environment variables (`SECRET_KEY`, `DATABASE_URL`) are present. Refer to `.env.example`.
+
+
 

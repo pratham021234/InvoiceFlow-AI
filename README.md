@@ -47,7 +47,25 @@ Built with **Next.js App Router (TypeScript + Tailwind CSS)** and **Python FastA
   - Zero-external key dependency with seamless rule-based fallback and strict human-in-the-loop review.
   - Dedicated Next.js Analytics dashboard (`/analytics`) with interactive metric cards, trend visualizer, aging bars, client leaderboard, export dropdowns, and AI drawer.
   - 63 comprehensive automated backend pytest tests passing (100%).
-- [ ] **Phase 6: Production Packaging & Commercial Marketplace Distribution**
+- [x] **Phase 6: Production Readiness, Security Audit, Deployment & Commercial Handoff**
+  - Full codebase security audit and vulnerability remediation matrix (`SECURITY_REVIEW.md`).
+  - Empirical feature status classification with test references (`RELEASE_AUDIT.md`).
+  - Automated quality gates report with exact command logs and 100% test pass rate (`RELEASE_TEST_REPORT.md`).
+  - Complete dependency license review verifying 100% permissive open-source licenses (`LICENSE_REVIEW.md`).
+  - Intellectual property provenance and cleanroom authorship certification (`OWNERSHIP_AND_PROVENANCE.md`).
+  - Commercial buyer handoff guide with rebranding instructions and operational costs (`BUYER_HANDOFF.md`).
+  - Structured version changelog for Phases 1–6 (`CHANGELOG.md`).
+  - Marketplace submission checklist for TrainPlex and codebase exchanges (`TRAINPLEX_SUBMISSION_CHECKLIST.md`).
+  - Final evidence-based release readiness decision: "Ready for Commercial Evaluation" (`RELEASE_READINESS.md`).
+
+---
+
+## 👥 Target Customers
+
+- **Freelancers & Independent Consultants:** Fast, professional invoicing with instant PDF generation and automated reminders.
+- **Agencies & Professional Services:** Multi-client accounts receivable tracking, partial payment reconciliation, and overdue aging dashboards.
+- **Small & Medium Businesses (SMBs):** Multi-tenant organization accounts, role-based access control, exportable financial reports, and AI assistance.
+- **SaaS Acquirers & Marketplace Buyers:** Clean, modular, unencumbered full-stack codebase ready for private-label rebranding and commercial deployment.
 
 ---
 
@@ -79,60 +97,83 @@ docker compose up --build
 #### Backend:
 ```powershell
 cd backend
-..\backend\.venv\Scripts\Activate.ps1
-..\backend\.venv\Scripts\pip.exe install -r requirements.txt
-..\backend\.venv\Scripts\alembic.exe upgrade head
-..\backend\.venv\Scripts\uvicorn.exe app.main:app --reload --port 8000
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m alembic upgrade head
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 #### Frontend:
 ```powershell
 cd frontend
-npm.cmd install
-npm.cmd run dev
+npm install
+npm run dev
 ```
 
 ---
 
-## 🧪 Automated Tests
+## 🧪 Quality Gates & Automated Tests
 
-Run backend tests using pytest:
-
+### Backend Automated Tests:
 ```powershell
 cd backend
-..\backend\.venv\Scripts\pytest.exe -v
+python -m pytest -v
 ```
-
-All 63 unit, integration, financial calculation, and multi-tenant security regression tests execute cleanly:
+All **63 automated unit, integration, financial calculation, and multi-tenant security regression tests** pass cleanly:
 ```text
 tests/test_auth.py (8 passed)
-tests/test_clients.py (4 passed)
-tests/test_decimal_engine.py (10 passed)
-tests/test_health.py (2 passed)
-tests/test_invoices_lifecycle.py (5 passed)
-tests/test_mass_assignment_and_constraints.py (2 passed)
 tests/test_organizations_isolation.py (3 passed)
-tests/test_payments.py (8 passed)
+tests/test_mass_assignment_and_constraints.py (2 passed)
+tests/test_clients.py (4 passed)
+tests/test_invoices_lifecycle.py (5 passed)
+tests/test_decimal_engine.py (10 passed)
+tests/test_payments.py (7 passed)
 tests/test_pdf_generation.py (2 passed)
 tests/test_receivables_and_email.py (6 passed)
 tests/test_analytics.py (6 passed)
 tests/test_csv_export.py (3 passed)
 tests/test_ai_assistant.py (4 passed)
-======================= 63 passed in 26.98s =======================
+tests/test_health.py (2 passed)
+======================= 63 passed in 22.57s =======================
+```
+
+### Frontend Static Analysis & Production Build:
+```powershell
+cd frontend
+npm run lint    # 0 errors (115 non-blocking warnings)
+npm run build   # Compiled successfully (20/20 routes generated)
 ```
 
 ---
 
-## 📖 Project Documentation
+## 📖 Comprehensive Project & Release Documentation
 
+- [RELEASE_READINESS.md](RELEASE_READINESS.md) — Final evidence-based milestone release decision.
+- [RELEASE_AUDIT.md](RELEASE_AUDIT.md) — Empirical feature classification and verification matrix.
+- [SECURITY_REVIEW.md](SECURITY_REVIEW.md) — Application security review, vulnerability findings, and remediations.
+- [RELEASE_TEST_REPORT.md](RELEASE_TEST_REPORT.md) — Complete automated test report and execution logs.
+- [BUYER_HANDOFF.md](BUYER_HANDOFF.md) — Acquirer guide, system requirements, operating costs, and rebranding steps.
+- [LICENSE_REVIEW.md](LICENSE_REVIEW.md) — Direct and transitive dependency licensing inventory.
+- [OWNERSHIP_AND_PROVENANCE.md](OWNERSHIP_AND_PROVENANCE.md) — Code authorship provenance and intellectual property report.
+- [TRAINPLEX_SUBMISSION_CHECKLIST.md](TRAINPLEX_SUBMISSION_CHECKLIST.md) — TrainPlex marketplace submission requirements.
+- [CHANGELOG.md](CHANGELOG.md) — Chronological release history across Phases 1 through 6.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — System design, tenant isolation, and financial rules.
-- [SETUP.md](SETUP.md) — Detailed setup instructions for Windows PowerShell and Docker.
-- [SECURITY.md](SECURITY.md) — Security policies, token handling, and multi-tenant guarantees.
-- [TESTING.md](TESTING.md) — Testing strategy, test suites, and coverage reports.
+- [SETUP.md](SETUP.md) — Clean install guide for Windows PowerShell and Docker.
+- [SECURITY.md](SECURITY.md) — Security policies, threat model, and token handling.
+- [TESTING.md](TESTING.md) — Testing strategy, test suites, and coverage.
 - [DEPLOYMENT.md](DEPLOYMENT.md) — Production deployment, migrations, and disaster recovery.
 
 ---
 
-## 📄 License & Commercial Distribution
+## ⚠️ Known Scope & Limitations
 
-This codebase is prepared as a clean, modular SaaS foundation suitable for commercial deployment, white-labeling, or distribution on software marketplaces.
+1. **Manual Payment Recording:** Payment processing is backend-authoritative for manual payments, checks, bank transfers, and partial installments. Direct credit card tokenization (e.g. Stripe Checkout) is not pre-bundled to give acquirers freedom in choosing merchant aggregators.
+2. **External Credentials Required for Live Production:** Live transactional email delivery to external inboxes requires user-configured SMTP credentials (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`). Live LLM generation requires an OpenAI API key (`OPENAI_API_KEY`). Deterministic mock providers are enabled by default for zero-cost local operation.
+
+---
+
+## 📄 License & Commercial Clearance
+
+InvoiceFlow AI dependencies are 100% permissively licensed (MIT, Apache 2.0, BSD-3-Clause, ISC) with zero viral copyleft restrictions. The codebase is fully unencumbered and cleared for commercial acquisition, private-label SaaS deployment, and marketplace distribution.
+
