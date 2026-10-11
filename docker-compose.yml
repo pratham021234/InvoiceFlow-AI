@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: invoiceflow_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: invoiceflow
+      POSTGRES_PASSWORD: invoiceflow_secret
+      POSTGRES_DB: invoiceflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoiceflow -d invoiceflow_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: invoiceflow_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://invoiceflow:invoiceflow_secret@db:5432/invoiceflow_db
+      SECRET_KEY: ${SECRET_KEY:-invoiceflow-docker-secret-key-change-in-prod-xyz}
+      ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-mock}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: invoiceflow_frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
