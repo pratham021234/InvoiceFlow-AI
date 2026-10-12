@@ -49,9 +49,11 @@ function ClientDetailContent() {
         api.clients.invoices(activeOrganization.id, clientId),
       ]);
       setClient(clientData);
-      setInvoices(invResponse.items);
+      const invList = Array.isArray(invResponse) ? invResponse : ((invResponse as any)?.items || []);
+      setInvoices(invList);
     } catch (err: any) {
       setError(err.message || "Failed to load client details");
+      setInvoices([]);
     } finally {
       setLoading(false);
     }

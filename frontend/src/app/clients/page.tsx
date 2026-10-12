@@ -49,10 +49,13 @@ export default function ClientsPage() {
         search: search.trim() || undefined,
         is_archived: showArchived,
       });
-      setClients(res.items);
-      setTotal(res.total);
+      const clientList: Client[] = Array.isArray(res) ? res : ((res as any)?.items || []);
+      const totalCount = Array.isArray(res) ? res.length : ((res as any)?.total || clientList.length);
+      setClients(clientList);
+      setTotal(totalCount);
     } catch (err: any) {
       setError(err.message || "Failed to load clients");
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -187,14 +190,14 @@ export default function ClientsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80 font-normal">
-                {loading && clients.length === 0 ? (
+                {loading && (clients?.length ?? 0) === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-400" />
                       Loading clients...
                     </td>
                   </tr>
-                ) : clients.length === 0 ? (
+                ) : (clients?.length ?? 0) === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-16 text-center text-slate-400">
                       <Users className="w-12 h-12 text-slate-600 mx-auto mb-3" />
@@ -216,7 +219,7 @@ export default function ClientsPage() {
                     </td>
                   </tr>
                 ) : (
-                  clients.map((c) => (
+                  (clients || []).map((c) => (
                     <tr key={c.id} className="hover:bg-slate-800/40 transition">
                       <td className="px-6 py-4">
                         <Link

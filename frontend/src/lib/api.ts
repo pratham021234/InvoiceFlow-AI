@@ -513,14 +513,23 @@ export const api = {
   },
 
   clients: {
-    list: (orgId: string, params?: { skip?: number; limit?: number; search?: string; is_archived?: boolean }) => {
+    list: async (orgId: string, params?: { skip?: number; limit?: number; search?: string; is_archived?: boolean }): Promise<ClientListResponse> => {
       const qs = new URLSearchParams();
       if (params?.skip !== undefined) qs.set("skip", String(params.skip));
       if (params?.limit !== undefined) qs.set("limit", String(params.limit));
       if (params?.search) qs.set("search", params.search);
       if (params?.is_archived !== undefined) qs.set("is_archived", String(params.is_archived));
       const q = qs.toString() ? `?${qs.toString()}` : "";
-      return request<ClientListResponse>(`/organizations/${orgId}/clients${q}`);
+      const raw = await request<any>(`/organizations/${orgId}/clients${q}`);
+      if (Array.isArray(raw)) {
+        return {
+          items: raw,
+          total: raw.length,
+          skip: params?.skip || 0,
+          limit: params?.limit || raw.length,
+        };
+      }
+      return raw as ClientListResponse;
     },
 
     get: (orgId: string, clientId: string) =>
@@ -548,12 +557,21 @@ export const api = {
         method: "POST",
       }),
 
-    invoices: (orgId: string, clientId: string, params?: { skip?: number; limit?: number }) => {
+    invoices: async (orgId: string, clientId: string, params?: { skip?: number; limit?: number }): Promise<InvoiceListResponse> => {
       const qs = new URLSearchParams();
       if (params?.skip !== undefined) qs.set("skip", String(params.skip));
       if (params?.limit !== undefined) qs.set("limit", String(params.limit));
       const q = qs.toString() ? `?${qs.toString()}` : "";
-      return request<InvoiceListResponse>(`/organizations/${orgId}/clients/${clientId}/invoices${q}`);
+      const raw = await request<any>(`/organizations/${orgId}/clients/${clientId}/invoices${q}`);
+      if (Array.isArray(raw)) {
+        return {
+          items: raw,
+          total: raw.length,
+          skip: params?.skip || 0,
+          limit: params?.limit || raw.length,
+        };
+      }
+      return raw as InvoiceListResponse;
     },
   },
 
