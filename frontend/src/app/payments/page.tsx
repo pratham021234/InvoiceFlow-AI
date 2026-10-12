@@ -8,13 +8,10 @@ import Navigation from "@/components/Navigation";
 import { api, Payment } from "@/lib/api";
 import {
   CreditCard,
-  Search,
-  Filter,
   CheckCircle2,
   XCircle,
   AlertTriangle,
   RotateCcw,
-  Building2,
   Loader2,
   Receipt,
   ArrowUpRight,

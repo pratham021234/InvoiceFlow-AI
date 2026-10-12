@@ -14,7 +14,7 @@ export default function NewOrganizationPage() {
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [country, setCountry] = useState("United States");
-  const [timezone, setTimezone] = useState("UTC");
+  const [timezone] = useState("UTC");
   const [invoicePrefix, setInvoicePrefix] = useState("INV");
   const [taxId, setTaxId] = useState("");
   const [loading, setLoading] = useState(false);

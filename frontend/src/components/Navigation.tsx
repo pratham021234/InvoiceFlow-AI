@@ -12,7 +12,6 @@ import {
   ChevronDown,
   PlusCircle,
   LayoutDashboard,
-  Shield,
   User,
   Users,
   Receipt,

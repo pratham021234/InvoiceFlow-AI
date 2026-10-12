@@ -5,14 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Navigation from "@/components/Navigation";
-import { api, ReceivablesSummaryResponse, ReceivablesInvoiceItem } from "@/lib/api";
+import { api, ReceivablesSummaryResponse } from "@/lib/api";
 import {
   Clock,
   AlertTriangle,
   DollarSign,
   Search,
-  Filter,
-  Calendar,
   Send,
   CreditCard,
   ArrowUpRight,

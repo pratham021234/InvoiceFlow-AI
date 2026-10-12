@@ -7,10 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import {
   FileText,
   ShieldCheck,
-  Zap,
   ArrowRight,
   TrendingUp,
-  CreditCard,
   Building2,
   Lock,
 } from "lucide-react";
